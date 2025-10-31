@@ -78,7 +78,7 @@ return new Promise((resolve, reject) => {
     playerVars:{
      controls: 0,
      mute: 1,
-     autoplay: 1,
+     autoplay: 0,
      disablekb: 1,
      color: "white",
      fs: 0,   
