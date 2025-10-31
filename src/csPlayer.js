@@ -91,22 +91,39 @@ return new Promise((resolve, reject) => {
     },
     events:{
      'onReady':()=>{
-if($("#"+videoTag) != null && videoTag){
-csPlayer.pauseVideoWithPromise(csPlayer.csPlayers[videoTag]["videoTag"]).then(()=>{
-       parent.querySelector(".csPlayer-container iframe").addEventListener("load",()=>{ 
-      parent.querySelector(".csPlayer-container span i").classList.remove("csPlayer-loading");
-      csPlayer.csPlayers[videoTag]["videoTag"].addEventListener('onStateChange', onPlayerStateChange);
-      parent.querySelector(".csPlayer-controls-box main i:nth-of-type(1)").addEventListener("click", backward);
-      parent.querySelector(".csPlayer-controls-box main i:nth-of-type(2)").addEventListener("click", togglePlayPause);
-      parent.querySelector(".csPlayer-controls-box main i:nth-of-type(3)").addEventListener("click", forward);           
-csPlayer.csPlayers[videoTag]["TextTimeInterval"] = setInterval(updateTextTime,1000);      
-      csPlayer.csPlayers[videoTag]["TimeSliderInterval"] = setInterval(updateTimeSlider,1000);         parent.querySelector(".csPlayer-controls-box .csPlayer-controls input").addEventListener("input",updateSlider);
-      parent.querySelector(".csPlayer-controls-box .csPlayer-controls .fsBtn").addEventListener("click",toggleFullscreen);
-      document.fullscreenEnabled ? parent.querySelector(".csPlayer-controls-box .csPlayer-controls .fsBtn").style.display ="block" : parent.querySelector(".csPlayer-controls-box .csPlayer-controls .fsBtn").style.display ="none";
-      parent.querySelector(".csPlayer-controls-box .csPlayer-controls .settingsBtn").addEventListener("click",toggleSettings);
-      });//iframe onload
-      });
-      }}, //onReady
+      if($("#"+videoTag) != null && videoTag){
+        
+        /* * Correção: O evento 'onReady' é a nossa única fonte de verdade.
+         * Não usamos mais pauseVideoWithPromise (pois autoplay é 0).
+         * Não esperamos mais pelo 'iframe.load' (que causa a condição de corrida).
+         * Fazemos tudo diretamente aqui.
+         */
+
+        // 1. Remove o spinner e mostra o ícone de play real.
+        parent.querySelector(".csPlayer-container span i").classList.remove("csPlayer-loading");
+
+        // 2. Adiciona o listener para o "primeiro clique" no mobile.
+        function handleFirstPlay() {
+            parent.querySelector(".csPlayer-container span i").classList.add("csPlayer-loading"); // Mostra o loader
+            csPlayer.csPlayers[videoTag]["videoTag"].unMute();
+            csPlayer.csPlayers[videoTag]["videoTag"].playVideo();
+        }
+        parent.querySelectorAll(".csPlayer-container span div").forEach(div => {
+            div.addEventListener("click", handleFirstPlay);
+        });
+
+        // 3. Adiciona todos os listeners de controle (que antes estavam aninhados)
+        csPlayer.csPlayers[videoTag]["videoTag"].addEventListener('onStateChange', onPlayerStateChange);
+        parent.querySelector(".csPlayer-controls-box main i:nth-of-type(1)").addEventListener("click", backward);
+        parent.querySelector(".csPlayer-controls-box main i:nth-of-type(2)").addEventListener("click", togglePlayPause);
+        parent.querySelector(".csPlayer-controls-box main i:nth-of-type(3)").addEventListener("click", forward);           
+        csPlayer.csPlayers[videoTag]["TextTimeInterval"] = setInterval(updateTextTime,1000);      
+        csPlayer.csPlayers[videoTag]["TimeSliderInterval"] = setInterval(updateTimeSlider,1000);         parent.querySelector(".csPlayer-controls-box .csPlayer-controls input").addEventListener("input",updateSlider);
+        parent.querySelector(".csPlayer-controls-box .csPlayer-controls .fsBtn").addEventListener("click",toggleFullscreen);
+        document.fullscreenEnabled ? parent.querySelector(".csPlayer-controls-box .csPlayer-controls .fsBtn").style.display ="block" : parent.querySelector(".csPlayer-controls-box .csPlayer-controls .fsBtn").style.display ="none";
+        parent.querySelector(".csPlayer-controls-box .csPlayer-controls .settingsBtn").addEventListener("click",toggleSettings);
+      }
+    }}, //onReady
     }
   });
   resolve();
